@@ -1,0 +1,13 @@
+top_tb.sv
+audioEngine.sv
+clock_divider.sv
+uart_trx.sv
+osc_square.sv
+osc_saw.sv
+LFSR.v
+dsp_addcl.sv
+dsp_mult.sv
+dsp_mix2.sv
+dsp_lowp.sv
+dsp_highp.sv
+seq3.sv

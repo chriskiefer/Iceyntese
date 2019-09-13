@@ -1,0 +1,4 @@
+build/*
+*.lxt
+*.vvp
+*.vcd
