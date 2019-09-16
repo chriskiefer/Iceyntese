@@ -1,4 +1,4 @@
-`include "globals.vh"
+`include "../globals.vh"
 
 `timescale 10ns/1ns
 
@@ -23,7 +23,7 @@ module test;
 
 
   initial begin
-      $display("Fixed Point Examples");
+      $display("Fixxed Point Examples");
 
       // a = 8'b0011_1010;  // 3.6250
       a = $rtoi(1.49 * uf);  // 3.6250
