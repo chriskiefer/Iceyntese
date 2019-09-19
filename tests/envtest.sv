@@ -17,19 +17,20 @@ module test;
   (
     .clk(clk),       //clock signal
     .ena(1'b1),       //enable signal
-    .seq(4'b1000),   //input
-    .len(24'd20),
-    .seqOut(seqOut)  //output
+    .rst(1'b0),       //reset signal
+    .data_in(4'b1000),   //input
+    .len(24'd1),
+    .data_out(seqOut)  //output
   );
 
   reg signed [`BITS-1:0] envVal;
-  envseq #(.DEPTH(4), .LEN(3), .TSCALE(5)) env1 (
+  env #(.DEPTH(4), .LEN(4), .TSCALE(1)) env1 (
     .clk(clk),
     .trigger(seqOut),
     .ena(1'b1),       //enable signal
     .rst(1'b0),       //reset signal
-    .levels(12'hF25),
-    .times(8'h34),
+    .levels(16'hFAF1),
+    .times(12'h324),
     .envOut(envVal)
     );
 
@@ -37,8 +38,8 @@ module test;
   initial begin
       $dumpfile("rot_test.lxt");
       $dumpvars(0,test);
-      $display("Rotate Seq test");
-     # 500 $finish;
+      $display("Bit Seq test");
+     # 300 $finish;
   end
 
 

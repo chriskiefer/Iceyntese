@@ -175,13 +175,13 @@ module audioEngine (
     //   .sigOut(lowpOut)
     //   );
 
-    wire [`BITS-1:0] highpOut;
-    dsp_highp highp(
-      .clk(dspClockWtEnable),
-      .sigIn(addClOut),
-      .cutoff(`FPF(0.1)),
-      .sigOut(highpOut)
-      );
+    // wire [`BITS-1:0] highpOut;
+    // dsp_highp highp(
+    //   .clk(dspClockWtEnable),
+    //   .sigIn(addClOut),
+    //   .cutoff(`FPF(0.1)),
+    //   .sigOut(highpOut)
+    //   );
 
     // wire [`BITS-1:0] noiseGOut, noiseUOut;
     // LFSR_Plus #(.W(`BITS), .V(18), .g_type(0), .u_type(1)) noiseGen
@@ -193,7 +193,44 @@ module audioEngine (
     // 		.enable(1'b1)
     // 	);
 
-    assign w = squareWave;
+    wire seqOut2;
+    bitseq #(.DEPTH(8)) r1
+    (
+      .clk(dspClockWtEnable),       //clock signal
+      .ena(1'b1),       //enable signal
+      .seq(8'b10000100),   //input
+      .len(23'd4000),
+      .seqOut(seqOut2)  //output
+    );
+
+    reg signed [`BITS-1:0] envVal;
+    envseq #(.DEPTH(4), .LEN(3), .TSCALE(300)) env1 (
+      .clk(dspClockWtEnable),
+      .trigger(seqOut2),
+      .ena(1'b1),       //enable signal
+      .rst(1'b0),       //reset signal
+      .levels(12'hFA0),
+      .times(8'h94),
+      .envOut(envVal)
+      );
+
+    // assign w = {`BITS{seqOut2}};
+    // assign w = envVal;
+
+    wire [`BITS-1:0] m1;
+    dsp_mult mult (
+      .x(addClOut),
+      .y(envVal),
+      .prod(m1)
+      );
+
+    assign w = m1;
+
+    // assign w = `(BITS-1)'(seqOut2 << (`BITS-2));
+
+
+    // assign w = seqOut2 << (`BITS-4);
+    // assign w = 1'b1 << 10;
 
     // wire signed[7:0] mixOut;
     // reg signed[7:0] a1 = $rtoi(0.3 * FPscale);

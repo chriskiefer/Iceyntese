@@ -25,6 +25,9 @@ FILES += dsp_mix2.sv
 FILES += dsp_lowp.sv
 FILES += dsp_highp.sv
 FILES += seq3.sv
+FILES += bitseq.sv
+FILES += bitrotate.sv
+FILES += envseq.sv
 
 .PHONY: all clean burn
 
