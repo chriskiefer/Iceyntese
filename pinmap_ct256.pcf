@@ -11,3 +11,10 @@ set_io --warn-no-port hwclk J3
 # FTDI / UART pins
 set_io --warn-no-port ftdi_tx B12
 # set_io --warn-no-port ftdi_rx B10
+
+#Note: The modem pins (but not Tx and Rx) on the FTDI chip are active low, so the levels have to be inverted when reading/writing them.
+set_io --warn-no-port DCD B15 #out
+set_io --warn-no-port DSR B14 #out
+set_io --warn-no-port CTS A15 #out
+
+#https://github.com/mcmayer/iCE40

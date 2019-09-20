@@ -35,7 +35,9 @@ module audioEngine (
     /* LED outputs */
     output led1;
     reg led1;
+    reg led2val = 1'b1;
     output led2;
+    assign led2=led2val;
     output led8;
 
     /* FTDI I/O */
@@ -114,31 +116,30 @@ module audioEngine (
 
     // reg [15:0] wl = 16'd600;
     wire signed [`BITS-1:0] squareWave;
-    wire signed [`BITS-1:0] squareWave2, saw1, saw2, seqOut;
+    wire signed [`BITS-1:0] squareWave2, saw1, saw2, seqOut, seqOut3;
     wire [`BITS-1:0] inverted;
     wire [`BITS-1:0] w;
 
-
-
     seq3 sq (
       .clk(dspClockWtEnable),
-      .l0(`FREQ(0.5)),
-      .l1(`FREQ(0.7)),
-      .l2(`FREQ(0.2)),
-      .sigOut(seqOut)
+      .l0(`FREQ(0.29)),
+      .l1(`FREQ(0.999)),
+      .l2(`FREQ(0.994)),
+      .len(`MS(100)),
+      .sigOut(seqOut3)
       );
 
     osc_square sqosc (
       .clk(dspClockWtEnable),
-      .waveLen(seqOut),
+      .waveLen(seqOut3),
       .sigOut(squareWave)
       );
-
-    osc_square sqosc2 (
-      .clk(dspClockWtEnable),
-      .waveLen(`FREQ(0.31)),
-      .sigOut(squareWave2)
-      );
+    //
+    // osc_square sqosc2 (
+    //   .clk(dspClockWtEnable),
+    //   .waveLen(`FREQ(0.31)),
+    //   .sigOut(squareWave2)
+    //   );
     //
     // osc_saw sawOsc2 (
     //   .clk(dspClockWtEnable),
@@ -152,12 +153,12 @@ module audioEngine (
     //   .sigOut(saw1)
     //   );
 
-    wire [`BITS-1:0] addClOut;
-    dsp_addcl addcl (
-      .x(squareWave),
-      .y(squareWave2),
-      .sum(addClOut)
-      );
+    // wire [`BITS-1:0] addClOut;
+    // dsp_addcl addcl (
+    //   .x(squareWave),
+    //   .y(squareWave2),
+    //   .sum(addClOut)
+    //   );
 
     // wire [`BITS-1:0] m1;
     // dsp_mult mult (
@@ -183,34 +184,34 @@ module audioEngine (
     //   .sigOut(highpOut)
     //   );
 
-    // wire [`BITS-1:0] noiseGOut, noiseUOut;
-    // LFSR_Plus #(.W(`BITS), .V(18), .g_type(0), .u_type(1)) noiseGen
-    // 	(
-    // 		.g_noise_out(noiseGOut),
-    // 		.u_noise_out(noiseUOut),
-    // 		.clk(dspClockWtEnable),
-    // 		.n_reset(1'b1),
-    // 		.enable(1'b1)
-    // 	);
+    wire [`BITS-1:0] noiseGOut, noiseUOut;
+    LFSR_Plus #(.W(`BITS), .V(18), .g_type(0), .u_type(1)) noiseGen
+    	(
+    		.g_noise_out(noiseGOut),
+    		.u_noise_out(noiseUOut),
+    		.clk(dspClockWtEnable),
+    		.n_reset(1'b1),
+    		.enable(1'b1)
+    	);
 
     wire seqOut2;
     bitseq #(.DEPTH(8)) r1
     (
       .clk(dspClockWtEnable),       //clock signal
       .ena(1'b1),       //enable signal
-      .seq(8'b10000100),   //input
-      .len(23'd4000),
+      .seq(8'b10110001),   //input
+      .len(`MS(50)),
       .seqOut(seqOut2)  //output
     );
 
     reg signed [`BITS-1:0] envVal;
-    envseq #(.DEPTH(4), .LEN(3), .TSCALE(300)) env1 (
+    envseq #(.DEPTH(4), .LEN(4), .TSCALE(200)) env1 (
       .clk(dspClockWtEnable),
       .trigger(seqOut2),
       .ena(1'b1),       //enable signal
       .rst(1'b0),       //reset signal
-      .levels(12'hFA0),
-      .times(8'h94),
+      .levels(16'hFA30),
+      .times(12'h194),
       .envOut(envVal)
       );
 
@@ -219,12 +220,12 @@ module audioEngine (
 
     wire [`BITS-1:0] m1;
     dsp_mult mult (
-      .x(addClOut),
+      .x(noiseUOut),
       .y(envVal),
       .prod(m1)
       );
 
-    assign w = m1;
+    // assign w = m1;
 
     // assign w = `(BITS-1)'(seqOut2 << (`BITS-2));
 
@@ -232,19 +233,23 @@ module audioEngine (
     // assign w = seqOut2 << (`BITS-4);
     // assign w = 1'b1 << 10;
 
-    // wire signed[7:0] mixOut;
-    // reg signed[7:0] a1 = $rtoi(0.3 * FPscale);
-    // reg signed[7:0] a2 = $rtoi(0.4 * FPscale);
-    //
-    // dsp_mix2 mixer(
-    //   .sigIn1(squareWave),
-    //   .amp1(a1),
-    //   .sigIn2(squareWave2),
-    //   .amp2(a2),
-    //   .sigOut(mixOut)
-    //   );
-    //
-    // assign w = mixOut;
+    wire signed[7:0] mixOut;
+    reg signed[7:0] a1 = `FPF(0.8);
+    reg signed[7:0] a2 = `FPF(0.4);
+
+    dsp_mix2 mixer(
+      .sigIn1(squareWave),
+      .amp1(a1),
+      .sigIn2(m1),
+      .amp2(a2),
+      .sigOut(mixOut)
+      );
+
+    `CX crushout;
+    always @* begin
+      crushout = (mixOut >> (`BITS-3)) << (`BITS-3);
+    end
+    assign w = mixOut;
 
     // assign inverted = - squareWave;
 

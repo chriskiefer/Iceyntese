@@ -3,11 +3,12 @@ module seq3 (
   input signed [`BITS-1:0] l0,
   input signed [`BITS-1:0] l1,
   input signed [`BITS-1:0] l2,
+  input signed [23:0] len,
   output reg signed [`BITS-1:0] sigOut = 0
   );
 
 
-reg [24:0] counter = 0;
+reg [23:0] counter = 0;
 reg [1:0] step = 0;
 
 always @(posedge clk) begin
@@ -18,7 +19,7 @@ always @(posedge clk) begin
     2'd2: sigOut <= l2;
     default: sigOut <= l0;
   endcase
-  if (counter ==  3000) begin
+  if (counter ==  len) begin
     counter <= 0;
     if (step == 2) begin
       step <= 0;

@@ -11,6 +11,8 @@ module top (
     output led2,
     output led8,
     // UART lines
+    output DCD,
+    output CTS,
     output ftdi_tx
     );
 
@@ -20,6 +22,10 @@ module top (
 
     assign nrst = 1'b1;
     assign bypass = 1'b0;
+    reg DCDVal = 1'b0;
+    assign DCD = DCDVal;
+    reg CTSVal = 1'b0;
+    assign CTS = CTSVal;
 
     //high res clock for high speed uart
     SB_PLL40_CORE #(.FEEDBACK_PATH("SIMPLE"), .PLLOUT_SELECT("GENCLK"),

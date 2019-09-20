@@ -9,6 +9,8 @@ else
 FOOTPRINT = tq144
 endif
 
+export test=1
+
 # Files
 FILES = top.sv
 # FILES += globals.vh
@@ -44,7 +46,7 @@ $(BUILD)/$(PROJ).bin: $(FILES) Makefile
 	icepack $(BUILD)/$(PROJ).asc $(BUILD)/$(PROJ).bin
 
 burn:   $(BUILD)/$(PROJ).bin
-	iceprog $<
+	iceprog -d i:0x0403:0x6010:1 $(BUILD)/$(PROJ).bin
 
 clean:
 	rm -f build/*
