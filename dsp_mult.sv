@@ -8,7 +8,7 @@ reg signed[(`BITS*2)-1:0] result;
 
 always @* begin
   result = x * y;
-  prod = result >> `FPWIDTH;
+  prod = result >>> `FPWIDTH;
 end
 
 endmodule

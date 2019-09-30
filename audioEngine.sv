@@ -25,10 +25,6 @@ module audioEngine (
     ftdi_tx
     );
 
-    // parameter FP = 7;
-    // parameter FPfrom = 2.0**-FP;  //scale float from fp number
-    // parameter FPscale = 2.0 ** FP; //scale float to FP number
-
     /* Clock input */
     input clk;
 
@@ -52,7 +48,7 @@ module audioEngine (
     //audio engine
     parameter sampleRate = 16'd44100; //Hz
     parameter bufferSize = 16'd32; //warning: max buffer size
-    reg [7:0] buffer [0:bufferSize-1];
+    reg signed [7:0] buffer [0:bufferSize-1];
 
 
     wire bufferStartClock;
@@ -110,67 +106,69 @@ module audioEngine (
 
 
     reg dspEnabled = 0;
-    wire dspClockWtEnable;
-    assign dspClockWtEnable = dspEnabled && dspClock;
+    wire dspclk;
+    assign dspclk = dspEnabled && dspClock;
     reg dspBufferReady=1'd0;
 
     // reg [15:0] wl = 16'd600;
-    wire signed [`BITS-1:0] squareWave;
-    wire signed [`BITS-1:0] squareWave2, saw1, saw2, seqOut, seqOut3;
+    wire signed [`BITS-1:0] squareWave2, saw1, saw2, seqOut;
     wire [`BITS-1:0] inverted;
     wire [`BITS-1:0] w;
 
-    seq3 sq (
-      .clk(dspClockWtEnable),
-      .l0(`FREQ(0.29)),
-      .l1(`FREQ(0.999)),
-      .l2(`FREQ(0.994)),
-      .len(`MS(100)),
-      .sigOut(seqOut3)
+    sketch livesketch(
+      .dspclk(dspclk),
+      .sig(w)
       );
 
-    osc_square sqosc (
-      .clk(dspClockWtEnable),
-      .waveLen(seqOut3),
-      .sigOut(squareWave)
-      );
-    //
-    // osc_square sqosc2 (
-    //   .clk(dspClockWtEnable),
-    //   .waveLen(`FREQ(0.31)),
-    //   .sigOut(squareWave2)
+    // `CX seqOut3;
+    // seq3 seq3_seqOut3 (
+    //   .clk(dspclk),
+    //   .l0(`FREQ(0.9)),
+    //   .l1(`FREQ(0.5)),
+    //   .l2(`FREQ(0.92)),
+    //   .len(`MS(200)),
+    //   .sigOut(seqOut3)
     //   );
     //
-    // osc_saw sawOsc2 (
-    //   .clk(dspClockWtEnable),
-    //   .phaseInc(16'd),
-    //   .sigOut(saw2)
-    //   );
-    //
-    // osc_saw saw (
-    //   .clk(dspClockWtEnable),
-    //   .phaseInc(`BITS'sd20),
-    //   .sigOut(saw1)
+    // `CX seqOut3LP;
+    // dsp_lowp lowp_seqOut3(
+    //   .clk(dspclk),
+    //   .sigIn(seqOut3),
+    //   .cutoff(`FPF(0.001)),
+    //   .sigOut(seqOut3LP)
     //   );
 
-    // wire [`BITS-1:0] addClOut;
-    // dsp_addcl addcl (
+    // `CX squareWave;
+    // osc_square sqosc_squareWave (
+    //   .clk(dspclk),
+    //   .waveLen(`FREQ(0.5)),
+    //   .sigOut(squareWave)
+    //   );
+
+    // `CX sqdetune;
+    // dsp_mult mult_sqdetune (
+    //   .x(seqOut3LP),
+    //   .y(`FPF(1.3)),
+    //   .prod(sqdetune)
+    //   );
+    //
+    // `CX sqr2;
+    // osc_square sqosc_sqr2 (
+    //   .clk(dspclk),
+    //   .waveLen(sqdetune),
+    //   .sigOut(sqr2)
+    //   );
+    //
+    // `CX sqrdet;
+    // dsp_addcl addcl_sqrdet (
     //   .x(squareWave),
-    //   .y(squareWave2),
-    //   .sum(addClOut)
+    //   .y(sqr2),
+    //   .sum(sqrdet)
     //   );
-
-    // wire [`BITS-1:0] m1;
-    // dsp_mult mult (
-    //   .x(addClOut),
-    //   .y(`FPF(0.5)),
-    //   .prod(m1)
-    //   );
-
 
     // wire [`BITS-1:0] lowpOut;
     // dsp_lowp lowp(
-    //   .clk(dspClockWtEnable),
+    //   .clk(dspclk),
     //   .sigIn(addClOut),
     //   .cutoff(`FPF(0.005)),
     //   .sigOut(lowpOut)
@@ -178,78 +176,82 @@ module audioEngine (
 
     // wire [`BITS-1:0] highpOut;
     // dsp_highp highp(
-    //   .clk(dspClockWtEnable),
+    //   .clk(dspclk),
     //   .sigIn(addClOut),
     //   .cutoff(`FPF(0.1)),
     //   .sigOut(highpOut)
     //   );
+    // `CX sqrhp;
+    // dsp_highp highp_sqrhp(
+    //   .clk(dspclk),
+    //   .sigIn(sqrdet),
+    //   .cutoff(`FPF(0.1)),
+    //   .sigOut(sqrhp)
+    //   );
 
-    wire [`BITS-1:0] noiseGOut, noiseUOut;
-    LFSR_Plus #(.W(`BITS), .V(18), .g_type(0), .u_type(1)) noiseGen
-    	(
-    		.g_noise_out(noiseGOut),
-    		.u_noise_out(noiseUOut),
-    		.clk(dspClockWtEnable),
-    		.n_reset(1'b1),
-    		.enable(1'b1)
-    	);
+    // wire [`BITS-1:0] noiseGOut, noiseUOut;
+    // LFSR_Plus #(.W(`BITS), .V(18), .g_type(0), .u_type(1)) noiseGen
+    // 	(
+    // 		.g_noise_out(noiseGOut),
+    // 		.u_noise_out(noiseUOut),
+    // 		.clk(dspclk),
+    // 		.n_reset(1'b1),
+    // 		.enable(1'b1)
+    // 	);
+    // `CX noise_g, noise_u;
+    // LFSR_Plus #(.W(`BITS), .V(18), .g_type(0), .u_type(1)) noiseGen
+    //   (
+    //     .g_noise_out(noise_g),
+    //     .u_noise_out(noise_u),
+    //     .clk(dspclk),
+    //     .n_reset(1'b1),
+    //     .enable(1'b1)
+    //   );
+    //
+    // wire seqOut2;
+    // bitseq #(.DEPTH(8)) r1
+    // (
+    //   .clk(dspclk),       //clock signal
+    //   .ena(1'b1),       //enable signal
+    //   .seq(8'b10110001),   //input
+    //   .len(`MS(200)),
+    //   .seqOut(seqOut2)  //output
+    // );
+    //
+    // wire r1;
+    // bitseq #(.DEPTH(8)) bitseq_r1
+    // (
+    //   .clk(dspclk),       //clock signal
+    //   .ena(1'b1),       //enable signal
+    //   .seq(8'b10010010),   //input
+    //   .len(`MS(10)),
+    //   .seqOut(r1)  //output
+    // );
+    //
+    // wire signed [`BITS-1:0] envVal;
+    // envseq #(.DEPTH(4), .LEN(4), .TSCALE(200)) env1 (
+    //   .clk(dspclk),
+    //   .trigger(seqOut2),
+    //   .ena(1'b1),       //enable signal
+    //   .rst(1'b0),       //reset signal
+    //   .levels(16'hFA30),
+    //   .times(12'h194),
+    //   .envOut(envVal)
+    //   );
+    //
+    // `CX env1
+    // envseq #(.DEPTH(4), .LEN(4), .TSCALE(10)) envseq_env1 (
+    //   .clk(dspclk),
+    //   .trigger(envVal),     //1'b
+    //   .ena(1'b1),
+    //   .rst(1'b0),
+    //   .levels(16'hFA23),      //LEN levels
+    //   .times(12'hAFC),       //LEN-1 times
+    //   .envOut(env1)
+    //   );
 
-    wire seqOut2;
-    bitseq #(.DEPTH(8)) r1
-    (
-      .clk(dspClockWtEnable),       //clock signal
-      .ena(1'b1),       //enable signal
-      .seq(8'b10110001),   //input
-      .len(`MS(50)),
-      .seqOut(seqOut2)  //output
-    );
+    // assign w = squareWave;
 
-    reg signed [`BITS-1:0] envVal;
-    envseq #(.DEPTH(4), .LEN(4), .TSCALE(200)) env1 (
-      .clk(dspClockWtEnable),
-      .trigger(seqOut2),
-      .ena(1'b1),       //enable signal
-      .rst(1'b0),       //reset signal
-      .levels(16'hFA30),
-      .times(12'h194),
-      .envOut(envVal)
-      );
-
-    // assign w = {`BITS{seqOut2}};
-    // assign w = envVal;
-
-    wire [`BITS-1:0] m1;
-    dsp_mult mult (
-      .x(noiseUOut),
-      .y(envVal),
-      .prod(m1)
-      );
-
-    // assign w = m1;
-
-    // assign w = `(BITS-1)'(seqOut2 << (`BITS-2));
-
-
-    // assign w = seqOut2 << (`BITS-4);
-    // assign w = 1'b1 << 10;
-
-    wire signed[7:0] mixOut;
-    reg signed[7:0] a1 = `FPF(0.8);
-    reg signed[7:0] a2 = `FPF(0.4);
-
-    dsp_mix2 mixer(
-      .sigIn1(squareWave),
-      .amp1(a1),
-      .sigIn2(m1),
-      .amp2(a2),
-      .sigOut(mixOut)
-      );
-
-    `CX crushout;
-    always @* begin
-      crushout = (mixOut >> (`BITS-3)) << (`BITS-3);
-    end
-    assign w = mixOut;
 
     // assign inverted = - squareWave;
 
@@ -274,13 +276,25 @@ module audioEngine (
     parameter DSP_DONE = 8'd2;
     reg[7:0] dspState = DSP_WAITING;
     reg[7:0] dspCounter = 0;
+    reg[`BITS:0] shiftVal=0;
+
+`ifdef SIM
+    integer file;
+    initial file = $fopen("fpga.audio", "wb");
+`endif
+
 
     always @(posedge dspClock) begin
       if (dspState == DSP_WAITING && bufferStartClock) begin
         dspState <= DSP_PROCESSING;
         dspEnabled <= 1'b1;
       end else if (dspState == DSP_PROCESSING) begin
-        buffer[dspCounter] <= w >>> (`BITS-8);
+        buffer[dspCounter] <= (w >>> (`BITS-8));
+
+`ifdef SIM
+        $fwriteb(file, "%c", buffer[dspCounter]);
+`endif
+
         dspCounter <= dspCounter + 8'd1;
         if (dspCounter == bufferSize-1) begin
           dspState <= DSP_DONE;
@@ -292,6 +306,7 @@ module audioEngine (
         dspCounter <= 8'd0;
       end
     end
+
 
     parameter STATE_WAITING=8'd0;
     parameter STATE_PREPARE=8'd1;

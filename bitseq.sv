@@ -28,9 +28,10 @@ module bitseq #(
 
   always @(posedge trigger) begin
     seq_out <= (seq & bitmask) > 0;
-    bitmask <= bitmask >> 1;
     if (bitmask == 1) begin
       bitmask <= 1'b1 << DEPTH-1;
+    end else begin
+      bitmask <= bitmask >> 1;
     end
   end
 

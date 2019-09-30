@@ -5,8 +5,8 @@ module dsp_addcl (
   );
 
 reg signed [`BITS:0] total;
-localparam maxSigned = ((2** `BITS) / 2) -1;
-localparam minSigned = ((2** `BITS) / -2);
+localparam maxSigned = (2** `FPWIDTH) -1;
+localparam minSigned = -(2** `FPWIDTH);
 
 always @* begin
   total = x + y;

@@ -21,6 +21,12 @@ module test;
 
   reg x;
 
+  reg [31:0] t = 32'b10000000_11111111_11111111_11111111;
+  reg [`BITS-1:0] u;
+  reg [`BITS-1:0] w;
+  reg signed [`BITS-1:0] sw;
+  reg  signed [7:0] sw8;
+
 
   initial begin
       $display("Fixxed Point Examples");
@@ -59,6 +65,18 @@ module test;
       e = ($rtoi($floor(0.9 * `MAXR)));
 
       $display("%d", e);
+
+      $display("%b", t);
+
+      u = {14{t[11]}};
+      // u =60000;
+      $display("%b", u);
+      // sw = u - 2**(`BITS-1);;
+      sw = u - 2**(`BITS-1);;
+      $display("sw %b %d", sw, sw);
+
+      sw8 = sw >>> (`BITS-8);
+      $display("sw8 %b %d", sw8, sw8);
 
   end
 

@@ -16,6 +16,7 @@ FILES = top.sv
 # FILES += globals.vh
 FILES += audioEngine.sv
 FILES += uart_trx.sv
+FILES += sketch.sv
 FILES += clock_divider.sv
 FILES += osc_square.sv
 FILES += osc_saw.sv
@@ -30,6 +31,7 @@ FILES += seq3.sv
 FILES += bitseq.sv
 FILES += bitrotate.sv
 FILES += envseq.sv
+
 
 .PHONY: all clean burn
 
@@ -46,7 +48,7 @@ $(BUILD)/$(PROJ).bin: $(FILES) Makefile
 	icepack $(BUILD)/$(PROJ).asc $(BUILD)/$(PROJ).bin
 
 burn:   $(BUILD)/$(PROJ).bin
-	iceprog -d i:0x0403:0x6010:1 $(BUILD)/$(PROJ).bin
-
+	# iceprog -d i:0x0403:0x6010:1 $(BUILD)/$(PROJ).bin
+	source ./liveburn.sh
 clean:
 	rm -f build/*

@@ -11,3 +11,4 @@ dsp_mix2.sv
 dsp_lowp.sv
 dsp_highp.sv
 seq3.sv
+sketch.sv

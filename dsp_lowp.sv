@@ -27,11 +27,17 @@ dsp_mult m2 (
   .prod(p2)
   );
 
+`CX addOut;
+dsp_addcl addcl_addOut (
+  .x(p1),
+  .y(p2),
+  .sum(addOut)
+  );
 
 always @(posedge clk) begin
-  y <= p1 + p2;
-  prev <= y;
-  sigOut <= y;
+  y <= addOut;
+  prev <= addOut;
+  sigOut <= addOut;
 end
 
 

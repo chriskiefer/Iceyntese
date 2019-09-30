@@ -1,3 +1,5 @@
+//iverilog -g2005-sv -o ae.vvp -c files.txt; vvp ae.vvp -lxt
+
 `timescale 10ns/1ns
 `define SIM
 
@@ -5,7 +7,7 @@ module test;
 
 
   initial begin
-     # 150000 $finish;
+     # 10000000 $finish;
   end
 
   /* Make a regular pulsing clock. */
@@ -23,11 +25,13 @@ module test;
     .ftdi_tx(ftdi)
   );
 
+
+
   initial begin
      // $monitor("At time %t, clk = %b, clkout = %b",
               // $time, clk, clockOut);
-    $dumpfile("top_test.lxt");
-    $dumpvars(0,test);
+    // $dumpfile("top_test.lxt");
+    // $dumpvars(0,test);
   end
 
 

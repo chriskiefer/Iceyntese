@@ -6,8 +6,6 @@ module dsp_mix2 (
   output signed [`BITS-1:0] sigOut
   );
 
-//assign sigOut = - sigIn; // finish this
-
 wire signed [`BITS-1:0] mix1, mix2;
 
 dsp_mult m1(

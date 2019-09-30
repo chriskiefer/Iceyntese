@@ -49,7 +49,7 @@ always @(posedge envTrig) begin
               envState <= ENV_RUNNING;
               timeCounter <= (times[((LEN-2) * DEPTH) +: DEPTH] * TSCALE) - 1;
               envLevel <= levels[((LEN-1) * DEPTH) +: DEPTH];
-              envLevelScaled <= levels[((LEN-1) * DEPTH) +: DEPTH] << (`BITS - DEPTH - 1);
+              envLevelScaled <= levels[((LEN-1) * DEPTH) +: DEPTH] << (`FPWIDTH - DEPTH - 1);
               levelOffset = ((LEN-1) * DEPTH);
               timeOffset = (DEPTH*(LEN-2));
             end
@@ -60,7 +60,7 @@ always @(posedge envTrig) begin
               //repeat of above
               timeCounter <= (times[((LEN-2) * DEPTH) +: DEPTH] * TSCALE) - 1;
               envLevel <= levels[((LEN-1) * DEPTH) +: DEPTH];
-              envLevelScaled <= levels[((LEN-1) * DEPTH) +: DEPTH] << (`BITS - `FPWIDTH - 1);
+              envLevelScaled <= levels[((LEN-1) * DEPTH) +: DEPTH] << (`FPWIDTH - DEPTH - 1);
               levelOffset <= ((LEN-1) * DEPTH);
               timeOffset <= (DEPTH*(LEN-2));
             end else begin
@@ -81,7 +81,7 @@ always @(posedge envTrig) begin
                   end
                 end
                 envLevel <= levels[(levelOffset - DEPTH) +: DEPTH];
-                envLevelScaled <= levels[(levelOffset - DEPTH) +: DEPTH] << (`BITS - `FPWIDTH - 1);
+                envLevelScaled <= levels[(levelOffset - DEPTH) +: DEPTH] << (`FPWIDTH - DEPTH - 1);
               end else begin
                 timeCounter <= timeCounter - 1;
               end
